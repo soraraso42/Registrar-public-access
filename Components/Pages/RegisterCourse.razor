@@ -1,29 +1,55 @@
-﻿@page "/RegisterCourse"
+﻿@page "/RegisterCourse/{selectedID:int}"
 
+Console.WriteLine(@selectedID);
 <h3>RegisterCourse</h3>
 
 <form class="form border border-1 bg-light p-5 mb-5 text-">
-<h3 class="mb-3 text-center"> student name full id </h3>
 
 
-  <div class="form-group mb-3 text-center">
-    <label for="studentType">Select Type</label>
-    <select class="form-control" id="studentType">
-      <option>for each to display </option>
-      
-    </select>
-  </div>
+<h3 class="mb-3 text-center"> @studentName </h3>
+
+
+<div class="dropdown"> 
+            <span class="text-center">
+                Select A Course 
+            </span> 
+            <ul class="dropdown-menu" > 
+                @foreach(var course in @availableCourses)
+                {<li class="text-center p-5"> 
+                  <label> 
+                    <input type="checkbox" 
+                           value="@course.ToString()"> 
+                        @course.ToString() 
+                    </label> 
+                </li>} 
+            </ul> 
+        </div> 
+
 <button class="btn btn-primary">Add Course</button>
-<button class="btn btn-secondary" @onclick="NavigateToHome">Cancel</button>
+<div class="btn btn-primary text-center m-0">
+    <span><a class = "text-light text-decoration-none" href="/">Cancel</a></span>
+</div>
+
 </form>
 
+
 @code {
-
-
-
-  [Inject] NavigationManager? Navigation {get; set;}
-  private void NavigateToHome()
+    
+    [Parameter] public int selectedID {get; set; } // read this from page url
+    public string studentName = "";
+    public List<Course> availableCourses = [];
+    public static List<Student> students = Helper.GetStudents();
+    protected override void OnParametersSet()
     {
-        Navigation?.NavigateTo("/");
+        int len = students.Count;
+        for (int i = 0; i < len; i++)
+        {
+            if (students[i].Id == selectedID)
+            {
+                studentName = students[i].FirstName + students[i].LastName ;
+                availableCourses = students[i].courses;
+            }
+        }
     }
+
 }
