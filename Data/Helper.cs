@@ -65,7 +65,72 @@ public class Helper
     return courses;
   }
 
+  public static List<Student> GetStudents()
+  {
+    List<Student> students = [];
+    var random = new Random();
+    Student student = new Student{
+      Id = GetStudentNumber(),
+      FirstName = "1FN",
+      LastName = "1LN",
+      Type = GetStudentTypes()[random.Next(3)],
+      courses = GetCourses(),
+    };
+    students.Add(student);
+    
+      student = new Student{
+      Id = GetStudentNumber(),
+      FirstName = "2FN",
+      LastName = "2LN",
+      Type = GetStudentTypes()[random.Next(3)],
+      courses = GetCourses(),
+    };
+    students.Add(student);
+
+    student = new Student{
+      Id = GetStudentNumber(),
+      FirstName = "3FN",
+      LastName = "3LN",
+      Type = GetStudentTypes()[random.Next(3)],
+      courses = GetCourses(),
+    };
+    students.Add(student);
+
+    student = new Student{
+      Id = GetStudentNumber(),
+      FirstName = "4FN",
+      LastName = "4LN",
+      Type = GetStudentTypes()[random.Next(3)],
+      courses = GetCourses(),
+    };
+    students.Add(student);
+
+    student = new Student{
+      Id = GetStudentNumber(),
+      FirstName = "5FN",
+      LastName = "5LN",
+      Type = GetStudentTypes()[random.Next(3)],
+      courses = GetCourses(),
+    };
+
+    students.Add(student);
+
+    return students;
+
+  }
+  private static readonly Random random = new Random();
   public static List<string> GetStudentTypes () {
     return ["Full Time", "Part Time", "Coop"];
   }
+
+  // using Random class to statically generate student number
+  // NOTE: instantiate random OUTSIDE loop to avoid unexpected behaviour (5 digits)
+  public static int GetStudentNumber(){
+    string s = "";
+    for (int i = 0; i < 6; i++)
+       { s +=  random.Next(10).ToString();};
+    int number = 0;
+    int.TryParse(s, out number);
+    return number;
+}
 }
