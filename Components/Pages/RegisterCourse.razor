@@ -1,0 +1,29 @@
+﻿@page "/RegisterCourse"
+
+<h3>RegisterCourse</h3>
+
+<form class="form border border-1 bg-light p-5 mb-5 text-">
+<h3 class="mb-3 text-center"> student name full id </h3>
+
+
+  <div class="form-group mb-3 text-center">
+    <label for="studentType">Select Type</label>
+    <select class="form-control" id="studentType">
+      <option>for each to display </option>
+      
+    </select>
+  </div>
+<button class="btn btn-primary">Add Course</button>
+<button class="btn btn-secondary" @onclick="NavigateToHome">Cancel</button>
+</form>
+
+@code {
+
+
+
+  [Inject] NavigationManager? Navigation {get; set;}
+  private void NavigateToHome()
+    {
+        Navigation?.NavigateTo("/");
+    }
+}
