@@ -66,6 +66,10 @@ public class Helper
   }
 
   private static readonly Random random = new Random();
+
+  public static List<Student> studentsList = GetStudents();
+  // keep a static database of students  
+  //instead of calling it every time Home reload
   public static List<Student> GetStudents()
   {
     List<Student> students = [];
@@ -129,7 +133,7 @@ public class Helper
 
   // using Random class to statically generate student number
   // NOTE: instantiate random OUTSIDE loop to avoid unexpected behaviour (5 digits)
-  public static int GetStudentNumber(){
+  private static int GetStudentNumber(){
     string s = "";
     for (int i = 0; i < 6; i++)
        { s +=  random.Next(10).ToString();};
