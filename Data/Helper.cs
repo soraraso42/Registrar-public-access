@@ -69,8 +69,8 @@ public class Helper
   {
     List<Student> students = [];
     Student student = new Student{
-      // Id = GetStudentNumber(),
-      Id = 222222,
+      Id = GetStudentNumber(),
+      // Id = 222222,
       FirstName = "1FN",
       LastName = "1LN",
       Type = GetStudentTypes()[random.Next(3)],
