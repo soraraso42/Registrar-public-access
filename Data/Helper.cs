@@ -65,6 +65,7 @@ public class Helper
     return courses;
   }
 
+  private static readonly Random random = new Random();
   public static List<Student> GetStudents()
   {
     List<Student> students = [];
@@ -122,7 +123,6 @@ public class Helper
     return students;
 
   }
-  private static readonly Random random = new Random();
   public static List<string> GetStudentTypes () {
     return ["Full Time", "Part Time", "Coop"];
   }
