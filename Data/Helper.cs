@@ -84,8 +84,7 @@ public class Helper
     students.Add(student);
     
       student = new Student{
-      // Id = GetStudentNumber(),
-      Id = 333333,
+      Id = GetStudentNumber(),
       FirstName = "2FN",
       LastName = "2LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -94,8 +93,7 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      // Id = GetStudentNumber(),
-      Id = 444444,
+      Id = GetStudentNumber(),
       FirstName = "3FN",
       LastName = "3LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -104,8 +102,7 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      // Id = GetStudentNumber(),
-      Id = 555555,
+      Id = GetStudentNumber(),
       FirstName = "4FN",
       LastName = "4LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -114,8 +111,7 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      // Id = GetStudentNumber(),
-      Id = 666666,
+      Id = GetStudentNumber(),
       FirstName = "5FN",
       LastName = "5LN",
       Type = GetStudentTypes()[random.Next(3)],

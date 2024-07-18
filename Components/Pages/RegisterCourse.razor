@@ -37,12 +37,12 @@
 @code {
     [Parameter] public string? studentName {get; set;} 
     [Parameter] public int selectedID { get; set; } // read this from page url
+    [Parameter] public static List<Student> students {get; set;} = Helper.studentsList ;
+
     private List<Course> courses = new List<Course>(); // Initialize the list
-    private List<Student> students = new List<Student>(); // Initialize the list
 
     protected override void OnParametersSet()
     {
         courses = Helper.GetCourses();
-        students = Helper.GetStudents();
     }
 }
