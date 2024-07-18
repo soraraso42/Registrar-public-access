@@ -1,55 +1,67 @@
 ﻿@page "/RegisterCourse/{selectedID:int}"
 
-Console.WriteLine(@selectedID);
+<p>student ID is @selectedID</p>
+
 <h3>RegisterCourse</h3>
+<p> students list is @students </p>
+<p> first student's ID is @students[0].Id</p>
+@for (var i=0; i< students.Count; i++)
+{
+    <p> student ID is @students[i].Id</p>};
 
-<form class="form border border-1 bg-light p-5 mb-5 text-">
+@* <form class="form border border-1 bg-light p-5 mb-5 text-center">
 
-
-<h3 class="mb-3 text-center"> @studentName </h3>
-
-
-<div class="dropdown"> 
+<div>@students[0].courses[0].ToString()</div>
+@for (var i=0; i< @students.Count; i++)
+{
+    <p> student ID is @students[i].Id</p>
+    if(@students[i].Id == @selectedID)
+    {
+        <div class="dropdown"> 
             <span class="text-center">
                 Select A Course 
             </span> 
             <ul class="dropdown-menu" > 
-                @foreach(var course in @availableCourses)
-                {<li class="text-center p-5"> 
+        foreach(var @course in @students[i].courses)
+        {
+            <li class="text-center p-5"> 
                   <label> 
                     <input type="checkbox" 
                            value="@course.ToString()"> 
                         @course.ToString() 
                     </label> 
-                </li>} 
-            </ul> 
+                </li>
+        };
+    </ul> 
         </div> 
+    }
+}
+
 
 <button class="btn btn-primary">Add Course</button>
 <div class="btn btn-primary text-center m-0">
     <span><a class = "text-light text-decoration-none" href="/">Cancel</a></span>
 </div>
 
-</form>
+</form> *@
 
 
 @code {
     
     [Parameter] public int selectedID {get; set; } // read this from page url
-    public string studentName = "";
-    public List<Course> availableCourses = [];
-    public static List<Student> students = Helper.GetStudents();
-    protected override void OnParametersSet()
-    {
-        int len = students.Count;
-        for (int i = 0; i < len; i++)
+    [Parameter] public string? studentName {get; set; }
+    
+    
+    [Parameter] public List<Student> students {get; set;}= Helper.GetStudents();
+    
+        @* for (int i = 0; i < len; i++)
         {
             if (students[i].Id == selectedID)
             {
                 studentName = students[i].FirstName + students[i].LastName ;
                 availableCourses = students[i].courses;
             }
-        }
-    }
+        };
+     *@
 
 }
