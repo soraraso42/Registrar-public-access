@@ -1,6 +1,6 @@
 ﻿@page "/AddStudent"
 <h3>AddStudent</h3>
-<form class="form border border-1 bg-light p-5 mb-5 text-">
+@* <form class="form border border-1 bg-light p-5 mb-5 text-"> *@
 <h3 class="mb-3 text-center">New Student</h3>
 <div class="form-field mb-3 text-center">
     <label class="form-label" for="firstName">First Name</label>
@@ -20,14 +20,8 @@
     </select>
   </div>
 <button class="btn btn-primary">Add Student</button>
-<button class="btn btn-secondary" @onclick="NavigateToHome">Cancel</button>
-</form>
+<div class="btn btn-secondary text-center m-0">
+    <span><a class = "text-light text-decoration-none" href="/">Cancel</a></span>
+</div>
+@* </form> *@
 
-
-@code {
-  [Inject] NavigationManager? Navigation {get; set;}
-  private void NavigateToHome()
-    {
-        Navigation?.NavigateTo("/");
-    }
-}

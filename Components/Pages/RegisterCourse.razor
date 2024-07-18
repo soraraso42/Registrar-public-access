@@ -17,8 +17,8 @@
 <ul class="list-group text-start mb-3">
     @foreach (var course in courses)
     {
-        <div class="course-select">
-            <input class="course-select-input" type="checkbox" value="@course.Code" id="@course.Code">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="@course.Code" id="@course.Code">
             <label class="form-check-label" for="@course.Code">
         @course.ToString()
             </label>
