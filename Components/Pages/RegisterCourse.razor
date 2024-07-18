@@ -1,41 +1,28 @@
 ﻿@page "/RegisterCourse/{selectedID:int}"
 
-<p>student ID is @selectedID</p>
+@* <p>Student ID is @selectedID</p> *@
 
-<h3>RegisterCourse</h3>
-<p> students list is @students </p>
-<p> first student's ID is @students[0].Id</p>
-@for (var i=0; i< students.Count; i++)
+@foreach(var student in students)
 {
-    <p> student ID is @students[i].Id</p>};
-
-@* <form class="form border border-1 bg-light p-5 mb-5 text-center">
-
-<div>@students[0].courses[0].ToString()</div>
-@for (var i=0; i< @students.Count; i++)
-{
-    <p> student ID is @students[i].Id</p>
-    if(@students[i].Id == @selectedID)
+    if (student.Id == selectedID)
     {
-        <div class="dropdown"> 
-            <span class="text-center">
-                Select A Course 
-            </span> 
-            <ul class="dropdown-menu" > 
-        foreach(var @course in @students[i].courses)
-        {
-            <li class="text-center p-5"> 
-                  <label> 
-                    <input type="checkbox" 
-                           value="@course.ToString()"> 
+        studentName = student.FirstName +" " + student.LastName;
+    }
+}
+<h3 class ="text-center">Register a course for @studentName</h3>
+
+<h4 class="mb-3">Course list is:</h4>
+<ul class="list-group text-start mb-3">
+    @foreach (var course in courses)
+    {
+            <li class="p-3 list-group-item "> 
+                    <label> 
+                        <input type="checkbox" value="@course.ToString()"> 
                         @course.ToString() 
                     </label> 
                 </li>
-        };
-    </ul> 
-        </div> 
     }
-}
+</ul>
 
 
 <button class="btn btn-primary">Add Course</button>
@@ -43,25 +30,17 @@
     <span><a class = "text-light text-decoration-none" href="/">Cancel</a></span>
 </div>
 
-</form> *@
 
 
 @code {
-    
-    [Parameter] public int selectedID {get; set; } // read this from page url
-    [Parameter] public string? studentName {get; set; }
-    
-    
-    [Parameter] public List<Student> students {get; set;}= Helper.GetStudents();
-    
-        @* for (int i = 0; i < len; i++)
-        {
-            if (students[i].Id == selectedID)
-            {
-                studentName = students[i].FirstName + students[i].LastName ;
-                availableCourses = students[i].courses;
-            }
-        };
-     *@
+    [Parameter] public string? studentName {get; set;} 
+    [Parameter] public int selectedID { get; set; } // read this from page url
+    private List<Course> courses = new List<Course>(); // Initialize the list
+    private List<Student> students = new List<Student>(); // Initialize the list
 
+    protected override void OnParametersSet()
+    {
+        courses = Helper.GetCourses();
+        students = Helper.GetStudents();
+    }
 }
