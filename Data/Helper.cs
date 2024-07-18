@@ -68,9 +68,9 @@ public class Helper
   public static List<Student> GetStudents()
   {
     List<Student> students = [];
-    var random = new Random();
     Student student = new Student{
-      Id = GetStudentNumber(),
+      // Id = GetStudentNumber(),
+      Id = 222222,
       FirstName = "1FN",
       LastName = "1LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -79,7 +79,8 @@ public class Helper
     students.Add(student);
     
       student = new Student{
-      Id = GetStudentNumber(),
+      // Id = GetStudentNumber(),
+      Id = 333333,
       FirstName = "2FN",
       LastName = "2LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -88,7 +89,8 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      Id = GetStudentNumber(),
+      // Id = GetStudentNumber(),
+      Id = 444444,
       FirstName = "3FN",
       LastName = "3LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -97,7 +99,8 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      Id = GetStudentNumber(),
+      // Id = GetStudentNumber(),
+      Id = 555555,
       FirstName = "4FN",
       LastName = "4LN",
       Type = GetStudentTypes()[random.Next(3)],
@@ -106,7 +109,8 @@ public class Helper
     students.Add(student);
 
     student = new Student{
-      Id = GetStudentNumber(),
+      // Id = GetStudentNumber(),
+      Id = 666666,
       FirstName = "5FN",
       LastName = "5LN",
       Type = GetStudentTypes()[random.Next(3)],
