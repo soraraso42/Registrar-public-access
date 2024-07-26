@@ -2,6 +2,55 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1 class="text-center">Student Info</h1>
+@* <div class="d-flex justify-content-end">
+<button class="btn btn-primary border border-1" @onclick="() => NavigateToAddStudent()"> Add Student</button>
+</div> *@
+<div class="btn btn-primary text-center mb-3">
+    <span><a class = "text-light text-decoration-none" href="/AddStudent">Add Student</a></span>
+</div>
+<table class="table table-striped border border-1 text-center">
+<thead class="font-weight-bold">
+    <tr>
+        <td>Student ID</td>
+        <td>First Name</td>
+        <td>Last Name</td>
+        <td>Type</td>
+        <td>Action</td>
+    </tr>
+</thead>
+<tbody>
+@foreach(var student in students){
+    <tr>
+    <td>@student.Id</td>
+    <td>@student.FirstName</td>
+    <td>@student.LastName</td>
+    <td>@student.Type</td>
+    <td>
+        @* <button class="btn btn-primary border border-1" @onclick="()=>NavigateToStudentRegister(student.Id)">Register</button> *@
+    <div class="btn btn-primary text-center m-0">
+    <span><a class = "text-light text-decoration-none" href="/RegisterCourse/@student.Id">Register</a></span>
+</div>
+    </td>
+    </tr>
+}
+</tbody>
 
-Welcome to your new app.
+</table>
+
+@code{
+    @* List<Student> students = Helper.GetStudents(); *@
+    [Parameter] public static List<Student> students {get; set;} = Helper.studentsList ;
+    [Inject] NavigationManager? Navigation { get; set; }
+      private void NavigateToStudentRegister(int studentId)
+    {
+        Console.WriteLine("NavigateToRegister method called");
+        Navigation?.NavigateTo($"/RegisterCourse/{studentId}");  
+    }
+
+        private void NavigateToAddStudent()
+    {
+        Console.WriteLine("NavigateToAddStudent method called");
+        Navigation?.NavigateTo("/AddStudent");
+    }
+}
