@@ -1,6 +1,9 @@
 ﻿@page "/RegisterCourse/{selectedID:int}"
 
 <PageTitle>Register Course </PageTitle>
+
+
+
 @foreach(var student in students)
 {
     if (student.Id == selectedID)
@@ -8,7 +11,7 @@
         studentName = student.FirstName +" " + student.LastName;
     }
 }
-
+@using Registrar.Components.Shared
 <RegistrarTitle> Register Courses for @studentName</RegistrarTitle>
 <h4 class="mt-3 mb-3">Course list is:</h4>
 

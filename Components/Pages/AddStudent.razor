@@ -3,9 +3,11 @@
 
 @* using a shared component as the displayed title across this app  *@
 <PageTitle> Add Student</PageTitle>
-<RegistrarTitle>Add Student</RegistrarTitle>
+@using Registrar.Components.Shared
+<RegistrarTitle> Add </RegistrarTitle> 
 
 <EditForm class="form border border-1 bg-light p-5 mb-5"
+            FormName="AddStudent"
           Model="Registrar" OnValidSubmit="HandleValidSubmit">
     <h3 class="mb-3 text-center">New Student</h3>
 
@@ -28,7 +30,7 @@
         </InputSelect>
     </div>
 
-    <button class="btn btn-primary" type="submit">Add Student</button>
+    <button class="btn btn-primary" type="submit" onclick="">Add Student</button>
 
     <div class="btn btn-secondary text-center m-0">
         <span><a class="text-light text-decoration-none" href="/">Cancel</a></span>
@@ -45,8 +47,8 @@
 
     public class RegistrarModel
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string StudentType { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? StudentType { get; set; }
     }
 }
