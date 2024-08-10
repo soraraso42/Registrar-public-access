@@ -1,7 +1,10 @@
 ﻿@page "/"
-
+@rendermode InteractiveServer
+@inject IConfiguration Config  
 <PageTitle>Home</PageTitle>
 <RegistrarTitle> Gallifreyan Academy  </RegistrarTitle> 
+
+
 
 <div class="btn btn-primary text-center mb-3">
     <span><a class = "text-light text-decoration-none" href="/AddStudent">Add Student</a></span>
@@ -16,6 +19,7 @@
         <td>Action</td>
     </tr>
 </thead>
+
 <tbody>
 @foreach(var student in students){
     <tr>
@@ -24,10 +28,7 @@
     <td>@student.LastName</td>
     <td>@student.Type</td>
     <td>
-        @* <button class="btn btn-primary border border-1" @onclick="()=>NavigateToStudentRegister(student.Id)">Register</button> *@
-    <div class="btn btn-primary text-center m-0">
-    <span><a class = "text-light text-decoration-none" href="/RegisterCourse/@student.Id">Register</a></span>
-</div>
+        <button class="btn btn-primary border border-1" @onclick="()=>NavigateToStudentRegister(student.Id)">Register</button>
     </td>
     </tr>
 }
@@ -36,8 +37,54 @@
 </table>
 
 @code{
-    @* List<Student> students = Helper.GetStudents(); *@
-    [Parameter] public static List<Student> students {get; set;} = Helper.studentsList ;
+    public static List<_student> students = [];
+    
+    @* prepare data model _student that matches DB  *@
+    public class _student{
+        public int Id;
+        public string? FirstName;
+        public string? LastName;
+        public string? Type;
+    }
+    //prepare for connection to DB
+    private string? connectionString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+        // connect to database specified by "default" string in the json file
+        connectionString = Config.GetConnectionString("default");
+        // using directive auto connect, open and close after retrieving data obj
+        using(var conn = new MySqlConnection(connectionString))
+        {
+            var sql = "select * from Registrar.Student"; // sql query cmd
+            var rows = await conn.QueryAsync<Registrar.Student>(sql);
+            var students_as_list = rows.ToList();
+            // bind retrieved data to local data model _student
+            students = [];
+            foreach(var l in students_as_list)
+            {
+            // verifies correct retrieval of data
+             //   Console.WriteLine(l.Id);
+               // Console.WriteLine(l.FirstName);
+            var oneStudent = new _student(); // NOTE: a new instance needed for each student
+            // otherwise the last student from DB overwrites all previous ones
+            // bind retrieved data to local data model _student
+            oneStudent.Id = l.Id;
+            oneStudent.FirstName = l.FirstName;
+            oneStudent.LastName = l.LastName;
+            oneStudent.Type = l.Type;
+            Console.WriteLine($"student name is {oneStudent.FirstName}"); // correct
+            students.Add(oneStudent);
+            Console.WriteLine($"There are now {students.Count()} students."); // incorrect 3,6,9 ...
+            }
+
+            Console.WriteLine($"There are {students.Count()} students."); // incorrect 3,6,9 ...
+            Console.WriteLine($"Name of second student is  {students[1].FirstName} students."); // incorrect always Rose
+        }
+
+    }
+
     [Inject] NavigationManager? Navigation { get; set; }
       private void NavigateToStudentRegister(int studentId)
     {
@@ -51,3 +98,4 @@
         Navigation?.NavigateTo("/AddStudent");
     }
 }
+
