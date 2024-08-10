@@ -1,28 +1,18 @@
 ﻿@page "/RegisterCourse/{selectedID:int}"
+@rendermode InteractiveServer
+@inject IConfiguration Config  
 
 <PageTitle>Register Course </PageTitle>
-
-
-
-@foreach(var student in students)
-{
-    if (student.Id == selectedID)
-    {
-        studentName = student.FirstName +" " + student.LastName;
-    }
-}
-@using Registrar.Components.Shared
-<RegistrarTitle> Register Courses for @studentName</RegistrarTitle>
-<h4 class="mt-3 mb-3">Course list is:</h4>
-
+<RegistrarTitle> Register Courses for @studentName @selectedID </RegistrarTitle>
+<h4 class="mt-3 mb-3">Course list:</h4>
 
 <ul class="list-group text-start mb-3">
     @foreach (var course in courses)
     {
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="@course.Code" id="@course.Code">
+            <input class="form-check-input" type="checkbox" @bind="course.isEnrolled" onclick="()=>ToggleRegistration(course)">
             <label class="form-check-label" for="@course.Code">
-        @course.ToString()
+            @course.Code - @course.Title - @course.WeeklyHours Hours per week
             </label>
         </div>
     }
@@ -38,14 +28,63 @@
 
 @code {
     [Parameter] public string? pageTitle{get;set;}
-    [Parameter] public string? studentName {get; set;} 
     [Parameter] public int selectedID { get; set; } // read this from page url
-    [Parameter] public static List<Student> students {get; set;} = Helper.studentsList ;
+    [Parameter] public string? studentName{get;set;}
 
-    private List<Course> courses = new List<Course>(); // Initialize the list
-
-    protected override void OnParametersSet()
+    // retrieve Course and Registration from DB
+    public List<Course> courses = new List<Course>(); // Initialize the list
+    public List<int> registeredCourses = []; // id of registered courses of a matching student 
+    private string? connectionString;
+     protected override async Task OnInitializedAsync()
     {
-        courses = Helper.GetCourses();
+        // connect to database specified by "default" string in the json file
+        connectionString = Config.GetConnectionString("default");
+        // using directive auto connect, open and close after retrieving data obj
+        using(var conn = new MySqlConnection(connectionString))
+        {
+
+            // retrieve existing registration status of selected student
+            var studentTable = "select * from Registrar.Student"; // sql query cmd
+            var studentRows = await conn.QueryAsync<Registrar.Student>(studentTable);
+            var students_as_list = studentRows.ToList();
+            foreach(var st in students_as_list)
+            {
+                if(st.Id == selectedID)
+                {
+                    studentName = st.FirstName + " "+ st.LastName;
+                }
+            }
+
+            var courseTable = "select * from Registrar.Course"; // sql query cmd
+            var courseRows = await conn.QueryAsync<Registrar.Course>(courseTable);
+            var courses_as_list = courseRows.ToList();
+            courses = [];
+            foreach(var c in courses_as_list)
+            {
+                var oneCourse = new Course();
+                oneCourse.Id = c.Id;
+                oneCourse.Code  = c.Code;
+                oneCourse.Title = c.Title;
+                oneCourse.WeeklyHours = c.WeeklyHours;
+                foreach(var i in registeredCourses)
+                {
+                    if(i == oneCourse.Id)
+                    {
+                        oneCourse.isEnrolled = true;
+                    }
+                }
+                courses.Add(oneCourse);
+            }
+
+        }   
     }
+    // method for toggle course choice
+    private void ToggleRegistration(Course c)
+    {
+        c.isEnrolled = !c.isEnrolled;
+    }
+
+
+
+
 }
