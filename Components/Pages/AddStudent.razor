@@ -10,35 +10,35 @@
 
 <EditForm class="form border border-1 bg-light p-5 mb-5"
             FormName="NewStudentForm"
-          Model="NewStudent"
+          Model="NewStudentData"
           OnValidSubmit="HandleValidSubmit">
             <DataAnnotationsValidator />
     <h3 class="mb-3 text-center">New Student</h3>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="firstName">First Name</label>
-        <InputText class="form-control" @bind-Value="NewStudent.FirstName" id="firstName" />
+        <InputText class="form-control" @bind-Value="NewStudentData.FirstName" id="firstName" />
         <ValidationMessage For="() => NewStudent.FirstName" />
 
     </div>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="lastName">Last Name</label>
-        <InputText class="form-control" @bind-Value="NewStudent.LastName" id="lastName" />
+        <InputText class="form-control" @bind-Value="NewStudentData.LastName" id="lastName" />
         <ValidationMessage For="() => NewStudent.LastName" />
     </div>
 
     <div class="form-group mb-3 text-center">
         <label for="studentType">Select Type</label>
         
-        <InputSelect class="form-control" @bind-Value="NewStudent.StudentType" id="studentType">
+        <InputSelect class="form-control" @bind-Value="NewStudentData.StudentType" id="studentType">
             <option value="" disabled selected>Select a student type</option>
             @foreach (var type in StudentTypes)
             {
                 <option value="@type">@type</option>
             }
         </InputSelect>
-        <ValidationMessage For="() => NewStudent.StudentType" />
+        <ValidationMessage For="() => NewStudentData.StudentType" />
 
     </div>
 
@@ -62,8 +62,9 @@
         public string? StudentType { get; set; }
     }
     
-    private AddStudentModel NewStudent = new AddStudentModel();
-  
+    public AddStudentModel NewStudentData = new AddStudentModel();
+
+    public Student NewStudent = new Student();
     private List<string> StudentTypes = new List<string> { "Full Time", "Part Time", "Coop" };
 
     private static readonly Random random = new Random();
@@ -80,10 +81,19 @@
    private void HandleValidSubmit()
    {
     // generate StudentId
-
+    NewStudent.Id = GetStudentNumber();
+    // bind data from form
+    NewStudent.FirstName = NewStudentData.FirstName;
+    NewStudent.LastName = NewStudentData.LastName;
+    NewStudent.Type = NewStudentData.StudentType;
+    
+    Console.WriteLine($"new student's id is {NewStudent.Id} and called {NewStudent.FirstName}"); // correct
     // send data to DB
+    // TODO: excute sql change
     // reload student data on Home
+    // TODO: event call back
     // clear instance of data model
+    NewStudentData = new AddStudentModel();
    }
 
 }
