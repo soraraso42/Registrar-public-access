@@ -6,9 +6,6 @@
 <PageTitle> Add Student</PageTitle>
 <RegistrarTitle> Add New Student </RegistrarTitle> 
 
-
-
-
 <EditForm class="form border border-1 bg-light p-5 mb-5"
             FormName="NewStudentForm"
           Model="NewStudentData"
@@ -68,25 +65,32 @@
 
     // bind user data to cannon model instance of Student class
     public Student NewStudent = new Student();
+    
     // action upon submitting valid input fields  
+    [Inject]
+    public NavigationManager Navigation { get; set; }
    private async Task HandleValidSubmit()
    {
     // generate StudentId
     NewStudent.Id = GetStudentNumber();
+
     // bind data from form via data model
     NewStudent.FirstName = NewStudentData.FirstName;
     NewStudent.LastName = NewStudentData.LastName;
     NewStudent.Type = NewStudentData.StudentType;
     // Console.WriteLine($"new student's id is {NewStudent.Id} and called {NewStudent.FirstName}"); // correct
+    
     // send data to DB
-    // TODO: excute sql change
     await InsertNewStudent(NewStudent);
-    // reload student data on Home
-    // TODO: event call back
 
     // clear instance of data model
     NewStudentData = new AddStudentModel();
+    
+    // redirect to home
+    Navigation.NavigateTo("/");
    }
+
+    // method for passing data to DB
     private string? connectionString;
     private async Task InsertNewStudent(Student s)
     {
@@ -98,8 +102,6 @@
         int success = await conn.ExecuteAsync(sql, new{s.Id,s.FirstName,s.LastName,s.Type});
         if (success >0){Console.WriteLine("insertion success");};
         };
-
-    
     }
  
    // method for generating random student Id for new students
