@@ -3,34 +3,47 @@
 
 @* using a shared component as the displayed title across this app  *@
 <PageTitle> Add Student</PageTitle>
-@using Registrar.Components.Shared
-<RegistrarTitle> Add </RegistrarTitle> 
+<RegistrarTitle> Add New Student </RegistrarTitle> 
+
+
+
 
 <EditForm class="form border border-1 bg-light p-5 mb-5"
-            FormName="AddStudent"
-          Model="Registrar" OnValidSubmit="HandleValidSubmit">
+            FormName="NewStudentForm"
+          Model="NewStudent"
+          OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
     <h3 class="mb-3 text-center">New Student</h3>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="firstName">First Name</label>
-        <InputText class="form-control" @bind-Value="Registrar.FirstName" id="firstName" />
+        <InputText class="form-control" @bind-Value="NewStudent.FirstName" id="firstName" />
+        <ValidationMessage For="() => NewStudent.FirstName" />
+
     </div>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="lastName">Last Name</label>
-        <InputText class="form-control" @bind-Value="Registrar.LastName" id="lastName" />
+        <InputText class="form-control" @bind-Value="NewStudent.LastName" id="lastName" />
+        <ValidationMessage For="() => NewStudent.LastName" />
     </div>
 
     <div class="form-group mb-3 text-center">
         <label for="studentType">Select Type</label>
-        <InputSelect class="form-control" @bind-Value="Registrar.StudentType">
-            <option value="Full Time">Full Time</option>
-            <option value="Part Time">Part Time</option>
-            <option value="Coop">Coop</option>
+        
+        <InputSelect class="form-control" @bind-Value="NewStudent.StudentType" id="studentType">
+            <option value="" disabled selected>Select a student type</option>
+            @foreach (var type in StudentTypes)
+            {
+                <option value="@type">@type</option>
+            }
         </InputSelect>
+        <ValidationMessage For="() => NewStudent.StudentType" />
+
     </div>
 
-    <button class="btn btn-primary" type="submit" onclick="">Add Student</button>
+
+    <button class="btn btn-primary" type="submit" >Add Student</button>
 
     <div class="btn btn-secondary text-center m-0">
         <span><a class="text-light text-decoration-none" href="/">Cancel</a></span>
@@ -38,17 +51,40 @@
 </EditForm>
 
 @code{
-    private RegistrarModel Registrar = new RegistrarModel();
 
-    private void HandleValidSubmit()
+    public class AddStudentModel
     {
-        // Add logic to save the student data to the database
-    }
-
-    public class RegistrarModel
-    {
+        [Required (ErrorMessage="Please enter First Name")]
         public string? FirstName { get; set; }
+        [Required (ErrorMessage="Please enter Last Name")]
         public string? LastName { get; set; }
+        [Required (ErrorMessage="Please select Student Type")]
         public string? StudentType { get; set; }
     }
+    
+    private AddStudentModel NewStudent = new AddStudentModel();
+  
+    private List<string> StudentTypes = new List<string> { "Full Time", "Part Time", "Coop" };
+
+    private static readonly Random random = new Random();
+    private static int GetStudentNumber()
+    {
+    string s = "";
+    for (int i = 0; i < 6; i++)
+       { s +=  random.Next(10).ToString();};
+    int number = 0;
+    int.TryParse(s, out number);
+    return number;
+    }
+@* action upon submitting valid input fields  *@
+   private void HandleValidSubmit()
+   {
+    // generate StudentId
+
+    // send data to DB
+    // reload student data on Home
+    // clear instance of data model
+   }
+
 }
+
