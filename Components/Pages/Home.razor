@@ -4,8 +4,6 @@
 <PageTitle>Home</PageTitle>
 <RegistrarTitle> Gallifreyan Academy  </RegistrarTitle> 
 
-
-
 <div class="btn btn-primary text-center mb-3">
     <span><a class = "text-light text-decoration-none" href="/AddStudent">Add Student</a></span>
 </div>
@@ -39,7 +37,7 @@
 @code{
     public static List<_student> students = [];
     
-    @* prepare data model _student that matches DB  *@
+    // prepare data model _student that matches DB  
     public class _student{
         public int Id;
         public string? FirstName;
@@ -64,23 +62,14 @@
             students = [];
             foreach(var l in students_as_list)
             {
-            // verifies correct retrieval of data
-             //   Console.WriteLine(l.Id);
-               // Console.WriteLine(l.FirstName);
-            var oneStudent = new _student(); // NOTE: a new instance needed for each student
-            // otherwise the last student from DB overwrites all previous ones
-            // bind retrieved data to local data model _student
+            var oneStudent = new _student(); 
             oneStudent.Id = l.Id;
             oneStudent.FirstName = l.FirstName;
             oneStudent.LastName = l.LastName;
             oneStudent.Type = l.Type;
-            Console.WriteLine($"student name is {oneStudent.FirstName}"); // correct
             students.Add(oneStudent);
-            Console.WriteLine($"There are now {students.Count()} students."); // incorrect 3,6,9 ...
             }
 
-            Console.WriteLine($"There are {students.Count()} students."); // incorrect 3,6,9 ...
-            Console.WriteLine($"Name of second student is  {students[1].FirstName} students."); // incorrect always Rose
         }
 
     }
