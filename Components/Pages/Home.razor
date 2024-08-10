@@ -35,15 +35,9 @@
 </table>
 
 @code{
-    public static List<_student> students = [];
-    
-    // prepare data model _student that matches DB  
-    public class _student{
-        public int Id;
-        public string? FirstName;
-        public string? LastName;
-        public string? Type;
-    }
+    public static List<Student> students = [];
+   // use existing class Student 
+   
     //prepare for connection to DB
     private string? connectionString;
 
@@ -62,7 +56,7 @@
             students = [];
             foreach(var l in students_as_list)
             {
-            var oneStudent = new _student(); 
+            var oneStudent = new Student(); 
             oneStudent.Id = l.Id;
             oneStudent.FirstName = l.FirstName;
             oneStudent.LastName = l.LastName;
