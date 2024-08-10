@@ -14,6 +14,10 @@ else
 {
     <EditForm OnValidSubmit="HandleValidSubmit" EditContext="editContext">
           <DataAnnotationsValidator />
+          
+            @* must use this tag to display custom msg from EditContext attribute  *@
+            <ValidationSummary /> 
+          
         <ul class="list-group text-start mb-3">
             @* NOTE!!! pass data to form from the local data model *@
             @foreach (var course in registerCourseModel.Courses)
@@ -84,7 +88,6 @@ else
             {
                 studentName = student.FirstName + " " + student.LastName;
                 studentType = student.Type;
-                Console.WriteLine(studentType);
             }
         }
     }
@@ -119,7 +122,6 @@ else
     private async Task HandleValidSubmit()
     {
         var canSubmit = IsValidChoice();
-        Console.WriteLine(canSubmit);
         if (canSubmit == false)
         {
             ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
@@ -158,22 +160,18 @@ else
     {
         int totalHours = registerCourseModel.Courses.Where(c => c.isEnrolled).Sum(c => c.WeeklyHours);
         int totalCount = registerCourseModel.Courses.Count(c => c.isEnrolled);
-        Console.WriteLine($"total hours is {totalHours}"); // correct 
         if (studentType == "Full Time" && totalHours > 16)
         {
-            Console.WriteLine($"Evaluating: studentType={studentType}, totalHours={totalHours}, totalCount={totalCount}");
             invalidChoiceMessage = "Full Time Students can register a maximum of 16 hours of courses weekly.";
             return false;
         }
         else if (studentType == "Part Time" && totalCount > 3)
         {
-            Console.WriteLine($"Evaluating: studentType={studentType}, totalHours={totalHours}, totalCount={totalCount}");
             invalidChoiceMessage = "Part Time Students can register a maximum of 3 courses.";
             return false;
         }
         else if (studentType == "Coop" && (totalHours > 4 || totalCount > 2))
         {
-            Console.WriteLine($"Evaluating: studentType={studentType}, totalHours={totalHours}, totalCount={totalCount}");
             invalidChoiceMessage = "Coop Students can register a maximum of 2 courses and a maximum of 4 hours of weekly courses.";
             return false;
         }
