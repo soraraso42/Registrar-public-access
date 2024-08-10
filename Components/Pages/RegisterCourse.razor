@@ -2,89 +2,120 @@
 @rendermode InteractiveServer
 @inject IConfiguration Config  
 
-<PageTitle>Register Course </PageTitle>
-<RegistrarTitle> Register Courses for @studentName @selectedID </RegistrarTitle>
+<PageTitle>Register Course</PageTitle>
+<RegistrarTitle>Register Courses for @studentName @selectedID</RegistrarTitle>
 <h4 class="mt-3 mb-3">Course list:</h4>
 
-<ul class="list-group text-start mb-3">
-    @foreach (var course in courses)
-    {
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" @bind="course.isEnrolled" onclick="()=>ToggleRegistration(course)">
-            <label class="form-check-label" for="@course.Code">
-            @course.Code - @course.Title - @course.WeeklyHours Hours per week
-            </label>
+<EditForm Model="@courses" OnValidSubmit="HandleValidSubmit">
+    <ul class="list-group text-start mb-3">
+        @foreach (var course in courses)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" @bind="course.isEnrolled">
+                <label class="form-check-label" for="@course.Code">
+                    @course.Code - @course.Title - @course.WeeklyHours Hours per week
+                </label>
+            </div>
+        }
+    </ul>
+    <div class ="justify-content align-center">
+        <button type="submit" class="btn btn-primary">Confirm Registration</button>
+        <div class="btn btn-primary text-center m-0">
+            <span><a class="text-light text-decoration-none" href="/">Cancel</a></span>
         </div>
-    }
-</ul>
-
-
-<button class="btn btn-primary">Add Course</button>
-<div class="btn btn-primary text-center m-0">
-    <span><a class = "text-light text-decoration-none" href="/">Cancel</a></span>
-</div>
-
+    </div>
+</EditForm>
 
 
 @code {
-    [Parameter] public string? pageTitle{get;set;}
-    [Parameter] public int selectedID { get; set; } // read this from page url
-    [Parameter] public string? studentName{get;set;}
+    [Parameter] public int selectedID { get; set; } // Read this from page URL
+    [Parameter] public string? studentName { get; set; }
 
-    // retrieve Course and Registration from DB
     public List<Course> courses = new List<Course>(); // Initialize the list
-    public List<int> registeredCourses = []; // id of registered courses of a matching student 
+    public List<int> registeredCourses = new List<int>(); // ID of registered courses for the matching student 
     private string? connectionString;
-     protected override async Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
-        // connect to database specified by "default" string in the json file
+        await ShowStudent();
+        await LoadCourseList();
+    }
+
+    private async Task ShowStudent()
+    {
         connectionString = Config.GetConnectionString("default");
-        // using directive auto connect, open and close after retrieving data obj
-        using(var conn = new MySqlConnection(connectionString))
+        using (var conn = new MySqlConnection(connectionString))
         {
-
-            // retrieve existing registration status of selected student
-            var studentTable = "select * from Registrar.Student"; // sql query cmd
-            var studentRows = await conn.QueryAsync<Registrar.Student>(studentTable);
-            var students_as_list = studentRows.ToList();
-            foreach(var st in students_as_list)
+            var studentTable = "SELECT * FROM Registrar.Student"; // SQL query
+            var students = (await conn.QueryAsync<Registrar.Student>(studentTable)).ToList();
+            var student = students.FirstOrDefault(s => s.Id == selectedID);
+            if (student != null)
             {
-                if(st.Id == selectedID)
-                {
-                    studentName = st.FirstName + " "+ st.LastName;
-                }
+                studentName = student.FirstName + " " + student.LastName;
             }
+        }
+    }
 
-            var courseTable = "select * from Registrar.Course"; // sql query cmd
-            var courseRows = await conn.QueryAsync<Registrar.Course>(courseTable);
-            var courses_as_list = courseRows.ToList();
-            courses = [];
-            foreach(var c in courses_as_list)
+    private async Task LoadCourseList()
+    {
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            // Retrieve and render a list of registered course IDs
+            var registrationTable = "SELECT * FROM Registrar.Registration";
+            var registrations = (await conn.QueryAsync<Registrar.Registration>(registrationTable)).ToList();
+            registeredCourses = registrations.Where(r => r.StudentId == selectedID).Select(r => r.CourseId).ToList();
+
+            // Retrieve and render info of registered courses
+            var courseTable = "SELECT * FROM Registrar.Course"; // SQL query
+            var coursesData = (await conn.QueryAsync<Registrar.Course>(courseTable)).ToList();
+            courses.Clear();
+            foreach (var c in coursesData)
             {
-                var oneCourse = new Course();
-                oneCourse.Id = c.Id;
-                oneCourse.Code  = c.Code;
-                oneCourse.Title = c.Title;
-                oneCourse.WeeklyHours = c.WeeklyHours;
-                foreach(var i in registeredCourses)
+                var oneCourse = new Course
                 {
-                    if(i == oneCourse.Id)
-                    {
-                        oneCourse.isEnrolled = true;
-                    }
-                }
+                    Id = c.Id,
+                    Code = c.Code,
+                    Title = c.Title,
+                    WeeklyHours = c.WeeklyHours,
+                    isEnrolled = registeredCourses.Contains(c.Id)
+                };
                 courses.Add(oneCourse);
             }
-
-        }   
+        }
     }
-    // method for toggle course choice
-    private void ToggleRegistration(Course c)
+
+    private async Task HandleValidSubmit()
     {
-        c.isEnrolled = !c.isEnrolled;
+        registeredCourses.Clear();
+        foreach (var c in courses)
+        {
+            if (c.isEnrolled)
+            {
+                registeredCourses.Add(c.Id);
+            }
+        }
+
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            // Clear registration table
+            var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
+            await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
+
+            // Repopulate registration table
+            foreach (var c in registeredCourses)
+            {
+                var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
+                int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
+                if (success > 0)
+                {
+                    Console.WriteLine("Insertion success");
+                }
+            }
+        }
+
+        // Reload course list after registration update
+        await LoadCourseList();
     }
-
-
-
-
 }
