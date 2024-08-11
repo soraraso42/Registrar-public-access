@@ -129,7 +129,8 @@ else
             editContext.NotifyValidationStateChanged();
             return;
         }
-        registeredCourses.Clear();
+
+    {    registeredCourses.Clear();
         foreach (var c in registerCourseModel.Courses)
         {
             if (c.isEnrolled)
@@ -150,7 +151,8 @@ else
                 int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
             }
         }
-
+        Console.WriteLine("Registration table updated.");
+    }
         await LoadCourseList();
     }
 
