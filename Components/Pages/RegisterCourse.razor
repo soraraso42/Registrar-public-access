@@ -32,11 +32,11 @@ else
 
         @if(invalidChoiceMessage != null)
         {
-            <div class="alert-warning">@invalidChoiceMessage</div>
+            <div class="alert-warning mb-3 p-3">@invalidChoiceMessage</div>
         }  
         else if(validChoiceMessage != null)
         {
-            <div class="alert-success">@validChoiceMessage</div>
+            <div class="alert-success mb-3 p-3">@validChoiceMessage</div>
         }
 
         <div class="justify-content align-center">
@@ -135,6 +135,7 @@ else
             ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
             messageStore.Add(() => registerCourseModel.Courses, invalidChoiceMessage);
             editContext.NotifyValidationStateChanged();
+            await LoadCourseList();
             return;
         }
 
@@ -169,8 +170,6 @@ else
 
     }
         await LoadCourseList();
-        Navigation.NavigateTo($"/RegisterCourse/{selectedID}", forceLoad: true);
-
     }
 
     public string? validChoiceMessage ;
