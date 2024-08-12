@@ -17,7 +17,7 @@ else
           
             @* must use this tag to display custom msg from EditContext attribute  *@
             <ValidationSummary /> 
-          
+
         <ul class="list-group text-start mb-3">
             @* NOTE!!! pass data to form from the local data model *@
             @foreach (var course in registerCourseModel.Courses)
@@ -151,11 +151,12 @@ else
                 int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
             }
         }
-
+        // verify successful update of DB
         Console.WriteLine("Registration table updated.");
+        // notify user of successful change
         ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
-            messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
-            editContext.NotifyValidationStateChanged();
+        messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
+        editContext.NotifyValidationStateChanged();
 
     }
         await LoadCourseList();
