@@ -14,9 +14,8 @@ else
 {
     <EditForm OnValidSubmit="HandleValidSubmit" EditContext="editContext">
           <DataAnnotationsValidator />
-          
             @* must use this tag to display custom msg from EditContext attribute  *@
-            <ValidationSummary /> 
+            @* <ValidationSummary />  *@
 
         <ul class="list-group text-start mb-3">
             @* NOTE!!! pass data to form from the local data model *@
@@ -30,6 +29,15 @@ else
                 </div>
             }
         </ul>
+
+        @if(invalidChoiceMessage != null)
+        {
+            <div class="alert-warning">@invalidChoiceMessage</div>
+        }  
+        else if(validChoiceMessage != null)
+        {
+            <div class="alert-success">@validChoiceMessage</div>
+        }
 
         <div class="justify-content align-center">
             <button type="submit" class="btn btn-primary">Confirm Registration</button>
@@ -154,12 +162,15 @@ else
         // verify successful update of DB
         Console.WriteLine("Registration table updated.");
         // notify user of successful change
+        invalidChoiceMessage =null;
         ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
         messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
         editContext.NotifyValidationStateChanged();
 
     }
         await LoadCourseList();
+        Navigation.NavigateTo($"/RegisterCourse/{selectedID}", forceLoad: true);
+
     }
 
     public string? validChoiceMessage ;
@@ -170,21 +181,25 @@ else
         int totalCount = registerCourseModel.Courses.Count(c => c.isEnrolled);
         if (studentType == "Full Time" && totalHours > 16)
         {
+            validChoiceMessage = null;
             invalidChoiceMessage = "Full Time Students can register a maximum of 16 hours of courses weekly.";
             return false;
         }
         else if (studentType == "Part Time" && totalCount > 3)
         {
+            validChoiceMessage = null;
             invalidChoiceMessage = "Part Time Students can register a maximum of 3 courses.";
             return false;
         }
         else if (studentType == "Coop" && (totalHours > 4 || totalCount > 2))
         {
+            validChoiceMessage = null;
             invalidChoiceMessage = "Coop Students can register a maximum of 2 courses and a maximum of 4 hours of weekly courses.";
             return false;
         }
         else
-        {
+        {   
+            invalidChoiceMessage =null;
             validChoiceMessage = $"you have successfully registered {totalCount} courses for a total of {totalHours} hours per week.";
             return true;
         }
