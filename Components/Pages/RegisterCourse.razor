@@ -135,6 +135,7 @@ else
             ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
             messageStore.Add(() => registerCourseModel.Courses, invalidChoiceMessage);
             editContext.NotifyValidationStateChanged();
+            // clear invalid choices
             await LoadCourseList();
             return;
         }
