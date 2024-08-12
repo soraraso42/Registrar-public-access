@@ -50,6 +50,7 @@ else
         public bool isEnrolled { get; set; }
     }
 
+    // delcare a wrapper class for the local data model for DB retrieval 
     public class RegisterCourseModel
     {
         public List<displayedCourse> Courses { get; set; } = new List<displayedCourse>();
@@ -73,7 +74,6 @@ else
         );
 
         editContext = new EditContext(registerCourseModel);
-
     }
 
     private async Task ShowStudent()
@@ -130,14 +130,14 @@ else
             return;
         }
 
-    {    registeredCourses.Clear();
-        foreach (var c in registerCourseModel.Courses)
-        {
-            if (c.isEnrolled)
+        {registeredCourses.Clear();
+            foreach (var c in registerCourseModel.Courses)
             {
-                registeredCourses.Add(c.Id);
+                if (c.isEnrolled)
+                {
+                    registeredCourses.Add(c.Id);
+                }
             }
-        }
 
         connectionString = Config.GetConnectionString("default");
         using (var conn = new MySqlConnection(connectionString))
@@ -151,13 +151,18 @@ else
                 int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
             }
         }
+
         Console.WriteLine("Registration table updated.");
+        ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
+            messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
+            editContext.NotifyValidationStateChanged();
+
     }
         await LoadCourseList();
     }
 
+    public string? validChoiceMessage ;
 
-    //TODO logic is wrong always return true
     private bool IsValidChoice()
     {
         int totalHours = registerCourseModel.Courses.Where(c => c.isEnrolled).Sum(c => c.WeeklyHours);
@@ -179,7 +184,7 @@ else
         }
         else
         {
-            invalidChoiceMessage = "good to go";
+            validChoiceMessage = $"you have registered {totalCount} courses for a total of {totalHours} hours per week.";
             return true;
         }
     }
