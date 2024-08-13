@@ -61,6 +61,7 @@ else
     // delcare a wrapper class for the local data model for DB retrieval 
     public class RegisterCourseModel
     {
+        [SupplyParameterFromForm]
         public List<displayedCourse> Courses { get; set; } = new List<displayedCourse>();
     }
 
@@ -149,28 +150,27 @@ else
                 }
             }
 
-        connectionString = Config.GetConnectionString("default");
-        using (var conn = new MySqlConnection(connectionString))
-        {
-            var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
-            await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
-
-            foreach (var c in registeredCourses)
+            connectionString = Config.GetConnectionString("default");
+            using (var conn = new MySqlConnection(connectionString))
             {
-                var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
-                int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
-            }
-        }
-        // verify successful update of DB
-        Console.WriteLine("Registration table updated.");
-        // notify user of successful change
-        invalidChoiceMessage =null;
-        ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
-        messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
-        editContext.NotifyValidationStateChanged();
+                var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
+                await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
 
-    }
-        await LoadCourseList();
+                foreach (var c in registeredCourses)
+                {
+                    var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
+                    int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
+                }
+            }
+            // verify successful update of DB
+            Console.WriteLine("Registration table updated.");
+            // notify user of successful change
+            invalidChoiceMessage =null;
+            ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
+            messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
+            editContext.NotifyValidationStateChanged();
+        }
+        await LoadCourseList(); 
     }
 
     public string? validChoiceMessage ;
