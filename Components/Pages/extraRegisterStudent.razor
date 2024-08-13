@@ -1,0 +1,202 @@
+﻿@page "/RegisterCourse/{selectedID:int}"
+@rendermode InteractiveServer
+@inject IConfiguration Config  
+
+<PageTitle>Register Course</PageTitle>
+<RegistrarTitle>Register Courses for @studentName @selectedID</RegistrarTitle>
+<h4 class="mt-3 mb-3">Course list:</h4>
+
+@if (editContext == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm OnValidSubmit="HandleValidSubmit" EditContext="editContext" Enhance>
+        <DataAnnotationsValidator />
+
+        <ul class="list-group text-start mb-3">
+            @foreach (var course in Courses)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" @bind="course.isEnrolled">
+                    <label class="form-check-label" for="@course.Code">
+                        @course.Code - @course.Title - @course.WeeklyHours Hours per week
+                    </label>
+                </div>
+            }
+        </ul>
+
+        @if (invalidChoiceMessage != null)
+        {
+            <div class="alert-warning mb-3 p-3">@invalidChoiceMessage</div>
+        }  
+        else if (validChoiceMessage != null)
+        {
+            <div class="alert-success mb-3 p-3">@validChoiceMessage</div>
+        }
+
+        <div class="justify-content align-center">
+            <button type="submit" class="btn btn-primary">Confirm Registration</button>
+            <div class="btn btn-primary text-center m-0">
+                <span><a class="text-light text-decoration-none" href="/">Cancel</a></span>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    public class displayedCourse
+    {
+        public int Id { get; set; }
+        public string? Code { get; set; }
+        public string? Title { get; set; }
+        public int WeeklyHours { get; set; }
+        public bool isEnrolled { get; set; }
+    }
+
+    public List<displayedCourse> Courses { get; set; } = new List<displayedCourse>();
+
+    [Parameter] public int selectedID { get; set; } // Read this from page URL
+    [Parameter] public string? studentName { get; set; }
+    private EditContext? editContext;
+    [Parameter] public string? studentType { get; set; }
+    private string? invalidChoiceMessage;
+    public List<int> registeredCourses = new List<int>(); // ID of registered courses for the matching student 
+    private string? connectionString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            ShowStudent(),
+            LoadCourseList()
+        );
+
+        editContext = new EditContext(this);  // Track the entire component
+    }
+
+    private async Task ShowStudent()
+    {
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            var studentTable = "SELECT * FROM Registrar.Student"; // SQL query
+            var students = (await conn.QueryAsync<Registrar.Student>(studentTable)).ToList();
+            var student = students.FirstOrDefault(s => s.Id == selectedID);
+            if (student != null)
+            {
+                studentName = student.FirstName + " " + student.LastName;
+                studentType = student.Type;
+            }
+        }
+    }
+
+    private async Task LoadCourseList()
+    {
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            var registrationTable = "SELECT * FROM Registrar.Registration";
+            var registrations = (await conn.QueryAsync<Registrar.Registration>(registrationTable)).ToList();
+            registeredCourses = registrations.Where(r => r.StudentId == selectedID).Select(r => r.CourseId).ToList();
+
+            var courseTable = "SELECT * FROM Registrar.Course"; // SQL query
+            var coursesData = (await conn.QueryAsync<Registrar.Course>(courseTable)).ToList();
+            Courses.Clear();
+            foreach (var c in coursesData)
+            {
+                var oneCourse = new displayedCourse()
+                {
+                    Id = c.Id,
+                    Code = c.Code,
+                    Title = c.Title,
+                    WeeklyHours = c.WeeklyHours,
+                    isEnrolled = registeredCourses.Contains(c.Id)
+                };
+                Courses.Add(oneCourse); 
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var canSubmit = IsValidChoice();
+        if (!canSubmit)
+        {
+            AddValidationMessage(invalidChoiceMessage);
+            await LoadCourseList();
+            return;
+        }
+
+        registeredCourses.Clear();
+        foreach (var c in Courses)
+        {
+            if (c.isEnrolled)
+            {
+                registeredCourses.Add(c.Id);
+            }
+        }
+
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
+            await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
+
+            foreach (var c in registeredCourses)
+            {
+                var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
+                await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
+            }
+        }
+
+        Console.WriteLine("Registration table updated.");
+        invalidChoiceMessage = null;
+        AddValidationMessage(validChoiceMessage);
+        
+        await LoadCourseList();
+    }
+
+    private void AddValidationMessage(string? message)
+    {
+        if (editContext != null)
+        {
+            var messageStore = new ValidationMessageStore(editContext);
+            messageStore.Clear();
+            messageStore.Add(() => Courses, message);
+            editContext.NotifyValidationStateChanged();
+        }
+    }
+
+    public string? validChoiceMessage;
+
+    private bool IsValidChoice()
+    {
+        int totalHours = Courses.Where(c => c.isEnrolled).Sum(c => c.WeeklyHours);
+        int totalCount = Courses.Count(c => c.isEnrolled);
+        if (studentType == "Full Time" && totalHours > 16)
+        {
+            validChoiceMessage = null;
+            invalidChoiceMessage = "Full Time Students can register a maximum of 16 hours of courses weekly.";
+            return false;
+        }
+        else if (studentType == "Part Time" && totalCount > 3)
+        {
+            validChoiceMessage = null;
+            invalidChoiceMessage = "Part Time Students can register a maximum of 3 courses.";
+            return false;
+        }
+        else if (studentType == "Coop" && (totalHours > 4 || totalCount > 2))
+        {
+            validChoiceMessage = null;
+            invalidChoiceMessage = "Coop Students can register a maximum of 2 courses and a maximum of 4 hours of weekly courses.";
+            return false;
+        }
+        else
+        {
+            invalidChoiceMessage = null;
+            validChoiceMessage = $"You have successfully registered {totalCount} courses for a total of {totalHours} hours per week.";
+            return true;
+        }
+    }
+}
