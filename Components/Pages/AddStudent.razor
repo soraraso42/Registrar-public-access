@@ -1,36 +1,47 @@
 ﻿@page "/AddStudent"
 @rendermode InteractiveServer
+@inject IConfiguration Config  
 
 @* using a shared component as the displayed title across this app  *@
 <PageTitle> Add Student</PageTitle>
-@using Registrar.Components.Shared
-<RegistrarTitle> Add </RegistrarTitle> 
+<RegistrarTitle> Add New Student </RegistrarTitle> 
 
 <EditForm class="form border border-1 bg-light p-5 mb-5"
-            FormName="AddStudent"
-          Model="Registrar" OnValidSubmit="HandleValidSubmit">
+            FormName="NewStudentForm"
+          Model="NewStudentData"
+          OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
     <h3 class="mb-3 text-center">New Student</h3>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="firstName">First Name</label>
-        <InputText class="form-control" @bind-Value="Registrar.FirstName" id="firstName" />
+        <InputText class="form-control" @bind-Value="NewStudentData.FirstName" id="firstName" />
+        <ValidationMessage For="() => NewStudentData.FirstName" />
+
     </div>
 
     <div class="form-field mb-3 text-center">
         <label class="form-label" for="lastName">Last Name</label>
-        <InputText class="form-control" @bind-Value="Registrar.LastName" id="lastName" />
+        <InputText class="form-control" @bind-Value="NewStudentData.LastName" id="lastName" />
+        <ValidationMessage For="() => NewStudentData.LastName" />
     </div>
 
     <div class="form-group mb-3 text-center">
         <label for="studentType">Select Type</label>
-        <InputSelect class="form-control" @bind-Value="Registrar.StudentType">
-            <option value="Full Time">Full Time</option>
-            <option value="Part Time">Part Time</option>
-            <option value="Coop">Coop</option>
+        
+        <InputSelect class="form-control" @bind-Value="NewStudentData.StudentType" id="studentType">
+            <option value="" disabled selected>Select a student type</option>
+            @foreach (var type in StudentTypes)
+            {
+                <option value="@type">@type</option>
+            }
         </InputSelect>
+        <ValidationMessage For="() => NewStudentData.StudentType" />
+
     </div>
 
-    <button class="btn btn-primary" type="submit" onclick="">Add Student</button>
+
+    <button class="btn btn-primary" type="submit" >Add Student</button>
 
     <div class="btn btn-secondary text-center m-0">
         <span><a class="text-light text-decoration-none" href="/">Cancel</a></span>
@@ -38,17 +49,72 @@
 </EditForm>
 
 @code{
-    private RegistrarModel Registrar = new RegistrarModel();
 
-    private void HandleValidSubmit()
+    // bind form input to blazor data model
+    public class AddStudentModel
     {
-        // Add logic to save the student data to the database
-    }
-
-    public class RegistrarModel
-    {
+        [Required (ErrorMessage="Please enter First Name")]
         public string? FirstName { get; set; }
+        [Required (ErrorMessage="Please enter Last Name")]
         public string? LastName { get; set; }
+        [Required (ErrorMessage="Please select Student Type")]
         public string? StudentType { get; set; }
     }
+    private List<string> StudentTypes = new List<string> { "Full Time", "Part Time", "Coop" };
+    public AddStudentModel NewStudentData = new AddStudentModel();
+
+    // bind user data to cannon model instance of Student class
+    public Student NewStudent = new Student();
+    
+    // action upon submitting valid input fields  
+    [Inject]
+    public NavigationManager Navigation { get; set; }
+   private async Task HandleValidSubmit()
+   {
+    // generate StudentId
+    NewStudent.Id = GetStudentNumber();
+
+    // bind data from form via data model
+    NewStudent.FirstName = NewStudentData.FirstName;
+    NewStudent.LastName = NewStudentData.LastName;
+    NewStudent.Type = NewStudentData.StudentType;
+    // Console.WriteLine($"new student's id is {NewStudent.Id} and called {NewStudent.FirstName}"); // correct
+    
+    // send data to DB
+    await InsertNewStudent(NewStudent);
+
+    // clear instance of data model
+    NewStudentData = new AddStudentModel();
+    
+    // redirect to home
+    Navigation.NavigateTo("/");
+   }
+
+    // method for passing data to DB
+    private string? connectionString;
+    private async Task InsertNewStudent(Student s)
+    {
+        connectionString = Config.GetConnectionString("default");
+        // using directive auto connect, open and close after retrieving data obj
+        using(var conn = new MySqlConnection(connectionString))
+        {
+        var sql = "insert into Registrar.Student(Id, FirstName, LastName, Type) values (@Id, @FirstName, @LastName, @Type)";
+        int success = await conn.ExecuteAsync(sql, new{s.Id,s.FirstName,s.LastName,s.Type});
+        if (success >0){Console.WriteLine("insertion success");};
+        };
+    }
+ 
+   // method for generating random student Id for new students
+    private static readonly Random random = new Random();
+    private static int GetStudentNumber()
+    {
+    string s = "";
+    for (int i = 0; i < 6; i++)
+       { s +=  random.Next(10).ToString();};
+    int number = 0;
+    int.TryParse(s, out number);
+    return number;
+    }
+
 }
+

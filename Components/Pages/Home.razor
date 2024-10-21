@@ -1,8 +1,8 @@
 ﻿@page "/"
-
+@rendermode InteractiveServer
+@inject IConfiguration Config  
 <PageTitle>Home</PageTitle>
-@using Registrar.Components.Shared
-<RegistrarTitle> Student List </RegistrarTitle> 
+<RegistrarTitle> Gallifreyan Academy  </RegistrarTitle> 
 
 <div class="btn btn-primary text-center mb-3">
     <span><a class = "text-light text-decoration-none" href="/AddStudent">Add Student</a></span>
@@ -17,6 +17,7 @@
         <td>Action</td>
     </tr>
 </thead>
+
 <tbody>
 @foreach(var student in students){
     <tr>
@@ -25,10 +26,7 @@
     <td>@student.LastName</td>
     <td>@student.Type</td>
     <td>
-        @* <button class="btn btn-primary border border-1" @onclick="()=>NavigateToStudentRegister(student.Id)">Register</button> *@
-    <div class="btn btn-primary text-center m-0">
-    <span><a class = "text-light text-decoration-none" href="/RegisterCourse/@student.Id">Register</a></span>
-</div>
+        <button class="btn btn-primary border border-1" @onclick="()=>NavigateToStudentRegister(student.Id)">Register</button>
     </td>
     </tr>
 }
@@ -37,8 +35,39 @@
 </table>
 
 @code{
-    @* List<Student> students = Helper.GetStudents(); *@
-    [Parameter] public static List<Student> students {get; set;} = Helper.studentsList ;
+    public static List<Student> students = [];
+   // use existing class Student 
+   
+    //prepare for connection to DB
+    private string? connectionString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+        // connect to database specified by "default" string in the json file
+        connectionString = Config.GetConnectionString("default");
+        // using directive auto connect, open and close after retrieving data obj
+        using(var conn = new MySqlConnection(connectionString))
+        {
+            var sql = "select * from Registrar.Student"; // sql query cmd
+            var rows = await conn.QueryAsync<Registrar.Student>(sql);
+            var students_as_list = rows.ToList();
+            // bind retrieved data to local data model _student
+            students = [];
+            foreach(var l in students_as_list)
+            {
+            var oneStudent = new Student(); 
+            oneStudent.Id = l.Id;
+            oneStudent.FirstName = l.FirstName;
+            oneStudent.LastName = l.LastName;
+            oneStudent.Type = l.Type;
+            students.Add(oneStudent);
+            }
+
+        }
+
+    }
+
     [Inject] NavigationManager? Navigation { get; set; }
       private void NavigateToStudentRegister(int studentId)
     {
@@ -52,3 +81,4 @@
         Navigation?.NavigateTo("/AddStudent");
     }
 }
+

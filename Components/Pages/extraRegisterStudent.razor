@@ -1,4 +1,4 @@
-﻿@page "/RegisterCourse/{selectedID:int}"
+﻿@page "/testerRegisterCourse/{selectedID:int}"
 @rendermode InteractiveServer
 @inject IConfiguration Config  
 
@@ -12,14 +12,11 @@
 }
 else
 {
-    <EditForm OnValidSubmit="HandleValidSubmit" EditContext="editContext">
-          <DataAnnotationsValidator />
-            @* must use this tag to display custom msg from EditContext attribute  *@
-            @* <ValidationSummary />  *@
+    <EditForm OnValidSubmit="HandleValidSubmit" EditContext="editContext" Enhance>
+        <DataAnnotationsValidator />
 
         <ul class="list-group text-start mb-3">
-            @* NOTE!!! pass data to form from the local data model *@
-            @foreach (var course in registerCourseModel.Courses)
+            @foreach (var course in Courses)
             {
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" @bind="course.isEnrolled">
@@ -30,11 +27,11 @@ else
             }
         </ul>
 
-        @if(invalidChoiceMessage != null)
+        @if (invalidChoiceMessage != null)
         {
             <div class="alert-warning mb-3 p-3">@invalidChoiceMessage</div>
         }  
-        else if(validChoiceMessage != null)
+        else if (validChoiceMessage != null)
         {
             <div class="alert-success mb-3 p-3">@validChoiceMessage</div>
         }
@@ -58,20 +55,13 @@ else
         public bool isEnrolled { get; set; }
     }
 
-    // delcare a wrapper class for the local data model for DB retrieval 
-    public class RegisterCourseModel
-    {
-        [SupplyParameterFromForm]
-        public List<displayedCourse> Courses { get; set; } = new List<displayedCourse>();
-    }
+    public List<displayedCourse> Courses { get; set; } = new List<displayedCourse>();
 
     [Parameter] public int selectedID { get; set; } // Read this from page URL
     [Parameter] public string? studentName { get; set; }
     private EditContext? editContext;
     [Parameter] public string? studentType { get; set; }
     private string? invalidChoiceMessage;
-
-    public RegisterCourseModel registerCourseModel = new RegisterCourseModel(); // Wrapper instance
     public List<int> registeredCourses = new List<int>(); // ID of registered courses for the matching student 
     private string? connectionString;
 
@@ -82,7 +72,7 @@ else
             LoadCourseList()
         );
 
-        editContext = new EditContext(registerCourseModel);
+        editContext = new EditContext(this);  // Track the entire component
     }
 
     private async Task ShowStudent()
@@ -112,7 +102,7 @@ else
 
             var courseTable = "SELECT * FROM Registrar.Course"; // SQL query
             var coursesData = (await conn.QueryAsync<Registrar.Course>(courseTable)).ToList();
-            registerCourseModel.Courses.Clear();
+            Courses.Clear();
             foreach (var c in coursesData)
             {
                 var oneCourse = new displayedCourse()
@@ -123,7 +113,7 @@ else
                     WeeklyHours = c.WeeklyHours,
                     isEnrolled = registeredCourses.Contains(c.Id)
                 };
-                registerCourseModel.Courses.Add(oneCourse); 
+                Courses.Add(oneCourse); 
             }
         }
     }
@@ -131,54 +121,59 @@ else
     private async Task HandleValidSubmit()
     {
         var canSubmit = IsValidChoice();
-        if (canSubmit == false)
+        if (!canSubmit)
         {
-            ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
-            messageStore.Add(() => registerCourseModel.Courses, invalidChoiceMessage);
-            editContext.NotifyValidationStateChanged();
-            // clear invalid choices
+            AddValidationMessage(invalidChoiceMessage);
             await LoadCourseList();
             return;
         }
 
-        {registeredCourses.Clear();
-            foreach (var c in registerCourseModel.Courses)
+        registeredCourses.Clear();
+        foreach (var c in Courses)
+        {
+            if (c.isEnrolled)
             {
-                if (c.isEnrolled)
-                {
-                    registeredCourses.Add(c.Id);
-                }
+                registeredCourses.Add(c.Id);
             }
-
-            connectionString = Config.GetConnectionString("default");
-            using (var conn = new MySqlConnection(connectionString))
-            {
-                var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
-                await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
-
-                foreach (var c in registeredCourses)
-                {
-                    var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
-                    int success = await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
-                }
-            }
-            // verify successful update of DB
-            Console.WriteLine("Registration table updated.");
-            // notify user of successful change
-            invalidChoiceMessage =null;
-            ValidationMessageStore messageStore = new ValidationMessageStore(editContext);
-            messageStore.Add(() => registerCourseModel.Courses, validChoiceMessage);
-            editContext.NotifyValidationStateChanged();
         }
-        await LoadCourseList(); 
+
+        connectionString = Config.GetConnectionString("default");
+        using (var conn = new MySqlConnection(connectionString))
+        {
+            var cmdDel = "DELETE FROM Registrar.Registration WHERE StudentId = @StudentId";
+            await conn.ExecuteAsync(cmdDel, new { StudentId = selectedID });
+
+            foreach (var c in registeredCourses)
+            {
+                var cmdInsert = "INSERT INTO Registrar.Registration (StudentId, CourseId) VALUES (@StudentId, @CourseId)";
+                await conn.ExecuteAsync(cmdInsert, new { StudentId = selectedID, CourseId = c });
+            }
+        }
+
+        Console.WriteLine("Registration table updated.");
+        invalidChoiceMessage = null;
+        AddValidationMessage(validChoiceMessage);
+        
+        await LoadCourseList();
     }
 
-    public string? validChoiceMessage ;
+    private void AddValidationMessage(string? message)
+    {
+        if (editContext != null)
+        {
+            var messageStore = new ValidationMessageStore(editContext);
+            messageStore.Clear();
+            messageStore.Add(() => Courses, message);
+            editContext.NotifyValidationStateChanged();
+        }
+    }
+
+    public string? validChoiceMessage;
 
     private bool IsValidChoice()
     {
-        int totalHours = registerCourseModel.Courses.Where(c => c.isEnrolled).Sum(c => c.WeeklyHours);
-        int totalCount = registerCourseModel.Courses.Count(c => c.isEnrolled);
+        int totalHours = Courses.Where(c => c.isEnrolled).Sum(c => c.WeeklyHours);
+        int totalCount = Courses.Count(c => c.isEnrolled);
         if (studentType == "Full Time" && totalHours > 16)
         {
             validChoiceMessage = null;
@@ -198,9 +193,9 @@ else
             return false;
         }
         else
-        {   
-            invalidChoiceMessage =null;
-            validChoiceMessage = $"you have successfully registered {totalCount} courses for a total of {totalHours} hours per week.";
+        {
+            invalidChoiceMessage = null;
+            validChoiceMessage = $"You have successfully registered {totalCount} courses for a total of {totalHours} hours per week.";
             return true;
         }
     }
